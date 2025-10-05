@@ -1,0 +1,9 @@
+FROM golang:1.22-alpine AS build
+WORKDIR /src
+COPY . .
+RUN go build -o /out/ingester ./cmd/ingester
+
+FROM alpine:3.19
+WORKDIR /app
+COPY --from=build /out/ingester /app/ingester
+ENTRYPOINT ["/app/ingester"]
