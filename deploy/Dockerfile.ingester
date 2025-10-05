@@ -1,7 +1,17 @@
 FROM golang:1.22-alpine AS build
 WORKDIR /src
+
+ENV CGO_ENABLED=0 GOTOOLCHAIN=auto
+RUN apk add --no-cache git
+RUN mkdir -p /out
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
-RUN go build -o /out/ingester ./cmd/ingester
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    go build -trimpath -ldflags="-s -w" -o /out/ingester ./cmd/ingester
 
 FROM alpine:3.19
 WORKDIR /app
